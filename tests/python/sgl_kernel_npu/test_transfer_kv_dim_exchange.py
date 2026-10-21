@@ -31,7 +31,15 @@ class TestTransferKV(unittest.TestCase):
             device="npu",
         )
         device_k = device_kv_buffer[0]
-        device_v = torch.empty(0) if v_empty else device_kv_buffer[1]
+        device_v = (
+            torch.empty(
+                (*device_k.shape[:-1], 0),
+                dtype=device_k.dtype,
+                device=device_k.device,
+            )
+            if v_empty
+            else device_kv_buffer[1]
+        )
 
         host_kv_buffer = torch.zeros(
             (2, NUM_PAGES, NUM_LAYERS, PAGE_SIZE, HEAD_NUM_PER_TP, HEAD_DIM),
@@ -47,7 +55,15 @@ class TestTransferKV(unittest.TestCase):
         )
 
         host_k = host_kv_buffer[0]
-        host_v = torch.empty(0) if v_empty else host_kv_buffer[1]
+        host_v = (
+            torch.empty(
+                (*host_k.shape[:-1], 0),
+                dtype=host_k.dtype,
+                device=host_k.device,
+            )
+            if v_empty
+            else host_kv_buffer[1]
+        )
 
         device_index_k = torch.ones(
             (NUM_LAYERS, NUM_PAGES, PAGE_SIZE, HEAD_NUM_PER_TP, HEAD_DIM),
@@ -288,8 +304,16 @@ class TestTransferKV(unittest.TestCase):
                 host_indices=host_indices,
                 device_k=device_kv,
                 host_k=host_kv,
-                device_v=torch.empty(0),
-                host_v=torch.empty(0),
+                device_v=torch.empty(
+                    (*device_kv.shape[:-1], 0),
+                    dtype=device_kv.dtype,
+                    device=device_kv.device,
+                ),
+                host_v=torch.empty(
+                    (*host_kv.shape[:-1], 0),
+                    dtype=host_kv.dtype,
+                    device=host_kv.device,
+                ),
                 device_index_k_scale=device_scale,
                 host_index_k_scale=host_scale,
                 page_size=PAGE_SIZE,

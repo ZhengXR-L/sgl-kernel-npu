@@ -92,11 +92,21 @@ def transfer_kv_dim_exchange(
         flags.value,
     )
     if device_index_k is not None and host_index_k is not None:
+        # The operator reads `device_v.sizes()[4]` unconditionally, so the empty
+        # V placeholder must be 5-D (last dim 0) rather than a 1-D empty tensor.
         torch.ops.npu.transfer_kv_dim_exchange(
             device_index_k,
             host_index_k,
-            torch.empty(0),
-            torch.empty(0),
+            torch.empty(
+                (*device_index_k.shape[:-1], 0),
+                dtype=device_index_k.dtype,
+                device=device_index_k.device,
+            ),
+            torch.empty(
+                (*host_index_k.shape[:-1], 0),
+                dtype=host_index_k.dtype,
+                device=host_index_k.device,
+            ),
             device_indices,
             host_indices,
             page_size,
@@ -112,8 +122,16 @@ def transfer_kv_dim_exchange(
         torch.ops.npu.transfer_kv_dim_exchange(
             device_index_k_scale,
             host_index_k_scale,
-            torch.empty(0),
-            torch.empty(0),
+            torch.empty(
+                (*device_index_k_scale.shape[:-1], 0),
+                dtype=device_index_k_scale.dtype,
+                device=device_index_k_scale.device,
+            ),
+            torch.empty(
+                (*host_index_k_scale.shape[:-1], 0),
+                dtype=host_index_k_scale.dtype,
+                device=host_index_k_scale.device,
+            ),
             device_indices,
             host_indices,
             page_size,
